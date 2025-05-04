@@ -15,5 +15,9 @@ namespace IamFishingMaster
 
         [Range(1, 100)] // 限制 AddingStandards 在 5 到 50 之间
         public int fishMultiplier { get; set; } = 1;
+
+
+        public bool experienceMultiplier { get; set; } = true;
+
     }
 }

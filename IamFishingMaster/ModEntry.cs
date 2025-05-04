@@ -69,6 +69,23 @@ namespace IamFishingMaster
             {
                 if (item.Category == StardewValley.Object.FishCategory)
                 {
+                    int fishQuality = item.Quality; // 0:普通, 1:银, 2:金, 4:铱金
+                    int fishDifficulty = 0; // 先初始化变量，避免作用域问题
+
+                    StardewValley.Object obj = item as StardewValley.Object;
+                    if (obj != null)
+                    {
+                        fishDifficulty = obj.Price / 10; // 价格近似代表难度
+                    }
+
+                    float baseExperience = (fishQuality + 1) * 3 + fishDifficulty / 3;
+
+                    bool isPerfectCatch = true; // 这里你需要检查是否完美钓鱼
+                    if (isPerfectCatch)
+                    {
+                        baseExperience *= 1.4f; // 完美钓鱼加成
+                    }
+
                     int fishMultiplier = this.Config.fishMultiplier;
                     int staminaMultiplier = this.Config.staminaMultiplier;
                     float realitystaminaMultiplier = (fishMultiplier * staminaMultiplier) * 1f;
@@ -77,6 +94,16 @@ namespace IamFishingMaster
                         for (int i = 1; i < fishMultiplier; i++)
                         {
                             Game1.player.addItemByMenuIfNecessary(item.getOne());
+
+
+                            if (this.Config.experienceMultiplier)
+                            {
+                                Game1.player.gainExperience(1, (int)baseExperience);
+                            }
+                            
+                            
+
+
                         }
                     }
                 }
@@ -125,6 +152,13 @@ namespace IamFishingMaster
                 setValue: value => this.Config.staminaMultiplier = value,
                 min: 1,
                 max: 100
+            );
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "经验奖励",
+                tooltip: () => "开启后获得额外经验奖励(受基础倍率影响)",
+                getValue: () => this.Config.experienceMultiplier,
+                setValue: value => this.Config.experienceMultiplier = value
             );
 
         }

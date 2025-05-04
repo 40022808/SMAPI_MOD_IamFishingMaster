@@ -1,7 +1,7 @@
 {
     "Name": "我是钓鱼大师",
     "Author": "中二魔王夜空",
-    "Version": "1.1.0",
+    "Version": "1.2.0",
     "Description": "消耗更多体力获得更多收获",
     "UniqueID": "ZEMWYK.IamFishingMaster",
     "EntryDll": "IamFishingMaster.dll",
@@ -10,7 +10,7 @@
     "Dependencies": [
         {
             "UniqueID": "spacechase0.GenericModConfigMenu",
-            "IsRequired": false
+            "IsRequired": true
         }
     ]
 }
