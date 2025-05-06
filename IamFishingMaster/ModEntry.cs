@@ -15,7 +15,8 @@ namespace IamFishingMaster
     public class ModEntry : Mod
     {
         private ModConfig? Config; //获取配置
-
+        private Item? LastCaughtFish; // 记录最近钓上的鱼
+        private bool justCaughtFish = false; // 用于判断是否刚刚钓鱼
 
         public override void Entry(IModHelper helper)
         {
@@ -54,8 +55,8 @@ namespace IamFishingMaster
                         alphaFade = 0.0005f // 控制透明度逐渐消失的速率
                     };
                     Game1.currentLocation.TemporarySprites.Add(mySprite);
-                    
 
+                    justCaughtFish = true; // 标记钓鱼过程开始
 
                 }
             }
@@ -65,49 +66,61 @@ namespace IamFishingMaster
 
         private void OnInventoryChanged(object sender, InventoryChangedEventArgs e)
         {
-            foreach (var item in e.Added)
+
+            if (justCaughtFish) // 确保事件来自钓鱼
             {
-                if (item.Category == StardewValley.Object.FishCategory)
+                foreach (var item in e.Added)
                 {
-                    int fishQuality = item.Quality; // 0:普通, 1:银, 2:金, 4:铱金
-                    int fishDifficulty = 0; // 先初始化变量，避免作用域问题
 
-                    StardewValley.Object obj = item as StardewValley.Object;
-                    if (obj != null)
+                    if (item.Category == StardewValley.Object.FishCategory)
                     {
-                        fishDifficulty = obj.Price / 10; // 价格近似代表难度
-                    }
+                        int fishQuality = item.Quality; // 0:普通, 1:银, 2:金, 4:铱金
+                        int fishDifficulty = 0; // 先初始化变量，避免作用域问题
 
-                    float baseExperience = (fishQuality + 1) * 3 + fishDifficulty / 3;
-
-                    bool isPerfectCatch = true; // 这里你需要检查是否完美钓鱼
-                    if (isPerfectCatch)
-                    {
-                        baseExperience *= 1.4f; // 完美钓鱼加成
-                    }
-
-                    int fishMultiplier = this.Config.fishMultiplier;
-                    int staminaMultiplier = this.Config.staminaMultiplier;
-                    float realitystaminaMultiplier = (fishMultiplier * staminaMultiplier) * 1f;
-                    if (Game1.player.Stamina >= Math.Max(1 * realitystaminaMultiplier, 1))
-                    {
-                        for (int i = 1; i < fishMultiplier; i++)
+                        StardewValley.Object obj = item as StardewValley.Object;
+                        if (obj != null)
                         {
-                            Game1.player.addItemByMenuIfNecessary(item.getOne());
-
-
-                            if (this.Config.experienceMultiplier)
-                            {
-                                Game1.player.gainExperience(1, (int)baseExperience);
-                            }
-                            
-                            
-
-
+                            fishDifficulty = obj.Price / 10; // 价格近似代表难度
                         }
+
+                        float baseExperience = (fishQuality + 1) * 3 + fishDifficulty / 3;
+
+                        bool isPerfectCatch = true; // 这里你需要检查是否完美钓鱼
+                        if (isPerfectCatch)
+                        {
+                            baseExperience *= 1.4f; // 完美钓鱼加成
+                        }
+
+                        int fishMultiplier = this.Config.fishMultiplier;
+                        int staminaMultiplier = this.Config.staminaMultiplier;
+                        float realitystaminaMultiplier = (fishMultiplier * staminaMultiplier) * 1f;
+                        if (Game1.player.Stamina >= Math.Max(1 * realitystaminaMultiplier, 1))
+                        {
+                            for (int i = 1; i < fishMultiplier; i++)
+                            {
+                                Game1.player.addItemByMenuIfNecessary(item.getOne());
+
+
+                                if (this.Config.experienceMultiplier)
+                                {
+                                    Game1.player.gainExperience(1, (int)baseExperience);
+                                }
+
+
+
+
+                            }
+                        }
+
+
+                        LastCaughtFish = item; // 记录最近获得的鱼
+                        justCaughtFish = false; // 复位标记，避免重复触发
+                        break; // 只存第一条新鱼，防止多次识别
                     }
+
                 }
             }
+            
         }
 
         private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
