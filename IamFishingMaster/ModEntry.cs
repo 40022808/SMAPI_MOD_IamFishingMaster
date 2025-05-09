@@ -15,7 +15,6 @@ namespace IamFishingMaster
     public class ModEntry : Mod
     {
         private ModConfig? Config; //获取配置
-        private Item? LastCaughtFish; // 记录最近钓上的鱼
         private bool justCaughtFish = false; // 用于判断是否刚刚钓鱼
 
         public override void Entry(IModHelper helper)
@@ -113,14 +112,56 @@ namespace IamFishingMaster
                         }
 
 
-                        LastCaughtFish = item; // 记录最近获得的鱼
                         justCaughtFish = false; // 复位标记，避免重复触发
-                        break; // 只存第一条新鱼，防止多次识别
                     }
 
                 }
+
+                foreach (var change in e.QuantityChanged)
+                {
+                    if (change.Item.Category == StardewValley.Object.FishCategory)
+                    {
+                        int fishQuality = change.Item.Quality; // 0:普通, 1:银, 2:金, 4:铱金
+                        int fishDifficulty = 0; // 先初始化变量，避免作用域问题
+
+                        StardewValley.Object obj = change.Item as StardewValley.Object;
+                        if (obj != null)
+                        {
+                            fishDifficulty = obj.Price / 10; // 价格近似代表难度
+                        }
+
+                        float baseExperience = (fishQuality + 1) * 3 + fishDifficulty / 3;
+
+                        bool isPerfectCatch = true; // 这里你需要检查是否完美钓鱼
+                        if (isPerfectCatch)
+                        {
+                            baseExperience *= 1.4f; // 完美钓鱼加成
+                        }
+
+                        int fishMultiplier = this.Config.fishMultiplier;
+                        int staminaMultiplier = this.Config.staminaMultiplier;
+                        float realitystaminaMultiplier = (fishMultiplier * staminaMultiplier) * 1f;
+
+                        // 检测堆叠数量是否增加
+                        if (change.NewSize > change.OldSize && Game1.player.Stamina >= Math.Max(1 * realitystaminaMultiplier, 1))
+                        {
+                            for (int i = 1; i < fishMultiplier; i++)
+                            {
+                                Game1.player.addItemByMenuIfNecessary(change.Item.getOne());
+
+                                if (this.Config.experienceMultiplier)
+                                {
+                                    Game1.player.gainExperience(1, (int)baseExperience);
+                                }
+                            }
+                        }
+
+                        justCaughtFish = false; // 复位标记，避免重复触发
+                    }
+                }
+
             }
-            
+
         }
 
         private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
